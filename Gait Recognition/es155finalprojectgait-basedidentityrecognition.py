@@ -1,6 +1,3 @@
-
-# coding: utf-8
-
 # In[1]:
 
 import numpy as np
@@ -13,62 +10,6 @@ warnings.filterwarnings('ignore')
 get_ipython().magic(u'matplotlib inline')
 
 
-# In[2]:
-
-# Toggle code on/off in a notebook
-
-from IPython.display import HTML
-
-HTML('''<script>
-code_show=true; 
-function code_toggle() {
- if (code_show){
- $('div.input').hide();
- } else {
- $('div.input').show();
- }
- code_show = !code_show
-} 
-$( document ).ready(code_toggle);
-</script>
-<form action="javascript:code_toggle()"><input type="submit" value="Click here to toggle on/off the raw code."></form>''')
-
-
-# **Motivation**
-
-# Gait is the locomotion caused by limb movement, defined as bipedal, biphasic forward propulsion of the center of gravity of the human body using the arms and legs. Although most humans walk (or run) using a similar process, there are differences in limb movement patterns that can characterize an individual’s gait. Gait is affected by many factors such as pathology, age,
-# height, and gender.
-# 
-# Thus, the biomechanics of gait are complicated with numerous parameters that vary from person to person and should allow quantitative association of a gait with a human identity. If a person’s motion characteristics can be typified, gait can be employed as a method of identity verification for various security measures such as building entrances and bank/ATM
-# transactions.
-
-# **Data Acquisition**
-
-# Using the Empatica E4 wristband with a three-axis accelerometer, I tracked 3-D acceleration data in a group of walkers. By training a classifier on gait data, I successfully (80% accuracy) associated walkers with their correct gaits based on variations inherent in gait. Further related questions of interest include
-# 
-#  - Does knowledge of the walker’s gender improve the classifier’s accuracy or speed? What about age?
-#  - Does the speed of walking impact the identifiability of gait?
-#  - Do the walker’s hands have to be freely swinging in order to categorize gait? For example, if someone is holding their credit    card up as they walk up to an ATM, will they still be recognizable?
-#  
-# For my data acquisition, I asked five participants (including myself) to walk normally for four ~30 second time periods while wearing the Empatica Band on their dominiant wrist. From that data collection, I reserved three samples from each participant for my training set - 15 samples in total. The remaining samples I reserved for later to test the classification of the model.
-
-# **Methodology**
-
-# For each of the six participants, I found their signature gait by averaging all three of their training samples and plotted it as a visual representation of the personalization of gait. I then created a three-item feature vector for each sample containing 1) the sample's largest frequency component, 2) the sample's second largest frequency component, and 3) the participant's sex. 
-# 
-# I chose these particular feature vectors because in my preliminary data analysis and research, I found that medical data and previous attempts at the gait identification problem provided good support for the significance of these particular attributes in gait. For frequencies, I was inspired by the approach taken in "A Frequency Domain Approach to Silhouette based
-# Gait Recognition", an engineering paper that proposed Fourier Transform as a method to prepare gait data for classification. In my own preliminary data analysis, I found that the Fast Fourier Transforms of different participant's gait samples did in fact look different, so I decided to use the largest two of these components as feature vectors. As for gender, much of the population variability in human gait can be attributed to the gross physical differences between men and women. Men tend to be taller, with longer limbs, and therefore larger strides than women. For ease of computation, I represented gender as a binary variable - 1 for females, 0 for males. 
-# 
-# Throughout my data analysis, I experimented with other features such as pace, principal components, and height; however, frequency components and gender yielded the best results with the fewest features. To avoid overfitting, I restricted by feature vectors to a length of three with possible five classes.
-# 
-# I chose LDA as my classifier because it can find a good predictor for the identity (i.e. a class) of any gait sample of the same distribution (not necessarily from the training set) given only that one observation. If I assume that the conditional PDFs are normally distributed with distinct mean and covariance parameters, then I can use Bayes rule to predict a gait as being from *x* class if the log of the likelihood ratios is below some threshold. For this, I used scikit-learn's LinearDiscriminantAnalysis function.
-# 
-# For each subject, I plotted the magnitude of their signature gait and calculated the class mean and covariance matrix using a feature vector computed for that signature gait.
-
-# **Preparation of Training Data**
-
-# In[3]:
-
 # load acceleration datasets and initialize variables
 trainingSetAcc = np.array(["ACC_UNA.csv", "ACC_JES.csv", "ACC_DDP.csv", "ACC_ENN.csv", "ACC_TJR.csv"])
 trainingSetSignatures = []
@@ -79,8 +20,6 @@ for i in range(len(trainingSetAcc)):
     magACC.append(np.sqrt(np.square(acc[i][1:,:]).sum(axis=1)))
     tACC.append(np.linspace(1,60, len(acc[i][1::, 0].astype(float))))
 
-
-# In[4]:
 
 # extract three samples from Participant 1
 UA_example_0 = magACC[0][400:650]
@@ -114,8 +53,6 @@ print "Class 1's covariance matrix is "
 print UA_cov
 
 
-# In[5]:
-
 # extract three samples from Participant 2
 JS_example_0 = magACC[1][300:550]
 JS_example_1 = magACC[1][650:925]
@@ -148,8 +85,6 @@ print "Class 2's covariance matrix is "
 print JS_cov
 
 
-# In[6]:
-
 # extract three samples from Participant 3
 DP_example_0 = magACC[2][100:550]
 DP_example_1 = magACC[2][725:1150]
@@ -181,9 +116,6 @@ print "Class 3's mean feature vector is ", DP_mean
 print "Class 3's covariance matrix is "
 print DP_cov
 
-
-# In[7]:
-
 # extract three samples from Participant 4
 EN_example_0 = magACC[3][225:560]
 EN_example_1 = magACC[3][650:985]
@@ -214,9 +146,6 @@ EN_mean = np.array([sorted(abs(np.fft.fft(EN_signature)), reverse=True)[0], sort
 print "Class 4's mean feature vector is ", EN_mean
 print "Class 4's covariance matrix is "
 print EN_cov
-
-
-# In[8]:
 
 # extract three samples from Participant 5
 TR_example_0 = magACC[4][850:1295]
@@ -252,8 +181,6 @@ print TR_cov
 
 # **Preparation of Testing Data**
 
-# In[9]:
-
 # extract one gait sample from each participant
 UA_example_3 = magACC[0][1600:1900] 
 JS_example_3 = magACC[1][1350:1625] 
@@ -269,8 +196,6 @@ testingSetFeatures = np.zeros([5, 3])
 for i, j in zip(range(len(testingSet)), [1, 0, 1, 1]):
     testingSetFeatures[i] = np.array([sorted(abs(np.fft.fft(testingSet[i])), reverse=True)[0], sorted(abs(np.fft.fft(testingSet[i])), reverse=True)[1], j])
 
-
-# In[10]:
 
 # compile samples from all participants
 samples = np.vstack((UA_features, JS_features, DP_features, EN_features, TR_features))
@@ -308,7 +233,6 @@ print "The accuracy of this gait recognition algorithm is ", hits/len(testingSet
 # 
 # To classify these, I tested them just as I did above with my testing set samples, and as I hypothesized, the model performs worse on these samples - achieving only 33.3% accuracy.
 
-# In[11]:
 
 encumberedTestingSet = np.array(["ACC_UA.csv", "ACC_JS.csv", "ACC_DP.csv"])
 acc, magACC, tACC = [], [], []
@@ -338,17 +262,5 @@ for i in range(len(testingSetFeatures)):
         hits += 1.
 
 print "The accuracy of this gait recognition algorithm is ", hits/len(testingSetFeatures)*100, "%"
-
-
-# **References**
-# 
-# Sengupta, Soumyadip, Udit Halder, Rameswar Panda, and Ananda S. Chowdhury. A Frequency Domain Approach to Silhouette Based Gait Recognition. ADepartment of Electronics and Tele-Communication Engineering, Jadavpur University, Kolkata, India, n.d. Web. 20 Nov. 2016.
-# 
-# "Human Gait." Wikipedia. Wikimedia Foundation, n.d. Web. 02 Nov. 2016. 
-# 
-# Gender differences in three dimensional gait analysis data from 98 healthy Korean adults. Cho, S.H. et al. Clinical Biomechanics , Volume 19 , Issue 2 , 145 - 152
-
-# In[ ]:
-
 
 
